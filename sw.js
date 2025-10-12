@@ -1,14 +1,15 @@
-const CACHE_NAME = 'fruit-game-v1';
+const CACHE_NAME = 'fruit-game-v2';
 const DB_NAME = 'fruit-game-db';
 const DB_VERSION = 1;
 const STORE_NAME = 'resources';
 
-// キャッシュするリソース
+// キャッシュするリソース（すべてのリソースをインストール時にダウンロード）
 const RESOURCES_TO_CACHE = [
-    '/',
-    '/index.html',
-    '/images/apple.png',
-    '/images/banana.png',
+    './',
+    './index.html',
+    './manifest.json',
+    './images/apple.png',
+    './images/banana.png',
     'https://cdn.tailwindcss.com'
 ];
 

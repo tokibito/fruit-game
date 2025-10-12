@@ -149,6 +149,8 @@
         let score = 0;
         let gameActive = false;
         let spawnInterval;
+        let fruitCount = 0;
+        const MAX_FRUITS = 10;
 
         const startButton = document.getElementById('start-button');
         const startScreen = document.getElementById('start-screen');
@@ -195,8 +197,9 @@
             scoreDisplayContainer.classList.add('hidden');
             resetButton.classList.add('hidden');
 
-            // スコアをリセット
+            // スコアとフルーツカウントをリセット
             score = 0;
+            fruitCount = 0;
             updateScore();
         }
 
@@ -220,12 +223,22 @@
 
         // フルーツを生成
         function spawnFruit() {
+            // 最大数に達している場合、最も古いフルーツを削除
+            if (fruitCount >= MAX_FRUITS) {
+                const oldestFruit = gameArea.querySelector('.fruit[data-fruit-id]');
+                if (oldestFruit) {
+                    oldestFruit.remove();
+                    fruitCount--;
+                }
+            }
+
             const fruit = document.createElement('div');
             fruit.className = 'fruit';
+            fruit.setAttribute('data-fruit-id', Date.now());
 
             // ランダムなフルーツ画像
             const randomFruit = fruitImages[Math.floor(Math.random() * fruitImages.length)];
-            fruit.innerHTML = `<img src="${randomFruit}" alt="fruit" class="w-full h-full object-contain">`;
+            fruit.innerHTML = `<img src="${randomFruit}" alt="fruit">`;
 
             // 画面外のランダムな開始位置
             const startSide = Math.floor(Math.random() * 4); // 0:上, 1:右, 2:下, 3:左
@@ -258,6 +271,7 @@
             fruit.style.top = startY + 'px';
 
             gameArea.appendChild(fruit);
+            fruitCount++;
 
             // フルーツの移動アニメーション
             const duration = 3000 + Math.random() * 2000; // 3〜5秒
@@ -273,12 +287,11 @@
                 fruit.style.left = currentX + 'px';
                 fruit.style.top = currentY + 'px';
 
+                // 目標地点に到達するまでアニメーション継続
                 if (progress < 1 && fruit.parentElement) {
                     requestAnimationFrame(moveFruit);
-                } else if (fruit.parentElement) {
-                    // 目標地点に到達したら消える
-                    fruit.remove();
                 }
+                // 目標地点に到達したら停止（削除しない）
             }
 
             moveFruit();
@@ -297,9 +310,10 @@
                 effect.style.top = fruit.style.top;
                 gameArea.appendChild(effect);
 
-                // エフェクトとフルーツを削除
+                // エフェクトを削除、フルーツを削除してカウント減少
                 setTimeout(() => effect.remove(), 500);
                 fruit.remove();
+                fruitCount--;
             });
         }
 

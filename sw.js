@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fruit-game-v2';
+const CACHE_NAME = 'fruit-game-v3';
 const DB_NAME = 'fruit-game-db';
 const DB_VERSION = 1;
 const STORE_NAME = 'resources';
@@ -9,8 +9,7 @@ const RESOURCES_TO_CACHE = [
     './index.html',
     './manifest.json',
     './images/apple.png',
-    './images/banana.png',
-    'https://cdn.tailwindcss.com'
+    './images/banana.png'
 ];
 
 // IndexedDBを開く

@@ -8,10 +8,18 @@
     <link rel="icon" type="image/png" href="images/apple.png">
     <link rel="apple-touch-icon" href="images/apple.png">
     <link rel="manifest" href="manifest.json">
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             overflow: hidden;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(to bottom, #7dd3fc, #bae6fd);
+            width: 100vw;
+            height: 100vh;
         }
         #game-area {
             position: relative;
@@ -27,6 +35,11 @@
         }
         .fruit:active {
             transform: scale(0.9);
+        }
+        .fruit img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
         .pop-effect {
             position: absolute;
@@ -44,17 +57,87 @@
                 transform: scale(2);
             }
         }
+        #score-display {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 0.75rem 1.5rem;
+            font-size: 1.875rem;
+            font-weight: bold;
+            color: #2563eb;
+            z-index: 10;
+        }
+        #reset-button {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-size: 1.125rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transition: background 0.2s, transform 0.1s;
+            z-index: 10;
+        }
+        #reset-button:hover {
+            background: #dc2626;
+            transform: scale(1.05);
+        }
+        #reset-button:active {
+            transform: scale(0.95);
+        }
+        #start-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100vw;
+            height: 100vh;
+        }
+        #start-button {
+            background: #22c55e;
+            color: white;
+            border: none;
+            font-weight: bold;
+            font-size: 2.25rem;
+            padding: 1.5rem 3rem;
+            border-radius: 9999px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        #start-button:hover {
+            background: #16a34a;
+            transform: scale(1.05);
+        }
+        #start-button:active {
+            transform: scale(0.95);
+        }
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
-<body class="bg-gradient-to-b from-sky-300 to-sky-100">
+<body>
+    <!-- リセットボタン -->
+    <button id="reset-button" class="hidden">
+        リセット
+    </button>
+
     <!-- スコア表示 -->
-    <div id="score-display" class="absolute top-4 right-4 bg-white rounded-lg shadow-lg px-6 py-3 text-3xl font-bold text-blue-600 z-10">
+    <div id="score-display" class="hidden">
         Score: <span id="score">0</span>
     </div>
 
     <!-- スタート画面 -->
-    <div id="start-screen" class="flex items-center justify-center w-screen h-screen">
-        <button id="start-button" class="bg-green-500 hover:bg-green-600 text-white font-bold text-4xl px-12 py-6 rounded-full shadow-2xl transform hover:scale-105 transition">
+    <div id="start-screen">
+        <button id="start-button">
             スタート
         </button>
     </div>
@@ -71,6 +154,8 @@
         const startScreen = document.getElementById('start-screen');
         const gameArea = document.getElementById('game-area');
         const scoreDisplay = document.getElementById('score');
+        const scoreDisplayContainer = document.getElementById('score-display');
+        const resetButton = document.getElementById('reset-button');
 
         // フルーツ画像のリスト
         const fruitImages = [
@@ -82,9 +167,38 @@
         startButton.addEventListener('click', () => {
             startScreen.classList.add('hidden');
             gameArea.classList.remove('hidden');
+            scoreDisplayContainer.classList.remove('hidden');
+            resetButton.classList.remove('hidden');
             gameActive = true;
             startGame();
         });
+
+        // リセットボタンのクリック
+        resetButton.addEventListener('click', () => {
+            resetGame();
+        });
+
+        // ゲームをリセット
+        function resetGame() {
+            // ゲームを停止
+            gameActive = false;
+            if (spawnInterval) {
+                clearInterval(spawnInterval);
+            }
+
+            // すべてのフルーツとエフェクトを削除
+            gameArea.innerHTML = '';
+
+            // UIをリセット
+            startScreen.classList.remove('hidden');
+            gameArea.classList.add('hidden');
+            scoreDisplayContainer.classList.add('hidden');
+            resetButton.classList.add('hidden');
+
+            // スコアをリセット
+            score = 0;
+            updateScore();
+        }
 
         // ゲーム開始
         function startGame() {

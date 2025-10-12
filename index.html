@@ -319,6 +319,15 @@
 
         // Service Workerの登録
         if ('serviceWorker' in navigator) {
+            // Service Workerからのメッセージを受け取る
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data.type === 'VERSION_UPDATE') {
+                    console.log(event.data.message);
+                    // キャッシュをクリアしてリロード
+                    window.location.reload();
+                }
+            });
+
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
                     .then(registration => {

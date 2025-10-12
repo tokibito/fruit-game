@@ -1,7 +1,8 @@
-const CACHE_NAME = 'fruit-game-v3';
+const CACHE_NAME = 'fruit-game-v4';
 const DB_NAME = 'fruit-game-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = 'resources';
+const VERSION_STORE = 'version';
 
 // キャッシュするリソース（すべてのリソースをインストール時にダウンロード）
 const RESOURCES_TO_CACHE = [
@@ -9,7 +10,8 @@ const RESOURCES_TO_CACHE = [
     './index.html',
     './manifest.json',
     './images/apple.png',
-    './images/banana.png'
+    './images/banana.png',
+    './version.json'
 ];
 
 // IndexedDBを開く
@@ -24,6 +26,9 @@ function openDB() {
             const db = event.target.result;
             if (!db.objectStoreNames.contains(STORE_NAME)) {
                 db.createObjectStore(STORE_NAME, { keyPath: 'url' });
+            }
+            if (!db.objectStoreNames.contains(VERSION_STORE)) {
+                db.createObjectStore(VERSION_STORE, { keyPath: 'key' });
             }
         };
     });
@@ -84,6 +89,80 @@ async function getFromIndexedDB(url) {
     }
 }
 
+// IndexedDBにバージョンを保存
+async function saveVersion(version) {
+    try {
+        const db = await openDB();
+        const tx = db.transaction(VERSION_STORE, 'readwrite');
+        const store = tx.objectStore(VERSION_STORE);
+
+        await store.put({
+            key: 'current',
+            version: version,
+            timestamp: Date.now()
+        });
+
+        return new Promise((resolve, reject) => {
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+        });
+    } catch (error) {
+        console.error('Error saving version:', error);
+    }
+}
+
+// IndexedDBからバージョンを取得
+async function getVersion() {
+    try {
+        const db = await openDB();
+        const tx = db.transaction(VERSION_STORE, 'readonly');
+        const store = tx.objectStore(VERSION_STORE);
+
+        return new Promise((resolve, reject) => {
+            const request = store.get('current');
+            request.onsuccess = () => {
+                resolve(request.result?.version || null);
+            };
+            request.onerror = () => reject(request.error);
+        });
+    } catch (error) {
+        console.error('Error getting version:', error);
+        return null;
+    }
+}
+
+// バージョンをチェックして更新が必要か判断
+async function checkVersion() {
+    try {
+        const response = await fetch('./version.json');
+        if (!response.ok) {
+            console.log('Version file not found, skipping version check');
+            return false;
+        }
+
+        const versionData = await response.json();
+        const newVersion = versionData.version;
+        const currentVersion = await getVersion();
+
+        console.log('Current version:', currentVersion);
+        console.log('New version:', newVersion);
+
+        if (currentVersion && currentVersion !== newVersion) {
+            console.log('Version changed, updating cache...');
+            await saveVersion(newVersion);
+            return true; // 更新が必要
+        } else if (!currentVersion) {
+            // 初回インストール
+            await saveVersion(newVersion);
+        }
+
+        return false; // 更新不要
+    } catch (error) {
+        console.error('Error checking version:', error);
+        return false;
+    }
+}
+
 // Service Workerのインストール
 self.addEventListener('install', (event) => {
     console.log('Service Worker: Installing...');
@@ -129,6 +208,23 @@ self.addEventListener('activate', (event) => {
 
             // すべてのクライアントを制御下に置く
             await self.clients.claim();
+
+            // バージョンチェック（オンライン時のみ）
+            try {
+                const needsUpdate = await checkVersion();
+                if (needsUpdate) {
+                    // すべてのクライアントにリロードを通知
+                    const clients = await self.clients.matchAll();
+                    clients.forEach(client => {
+                        client.postMessage({
+                            type: 'VERSION_UPDATE',
+                            message: 'New version available, reloading...'
+                        });
+                    });
+                }
+            } catch (error) {
+                console.log('Version check failed (probably offline):', error);
+            }
         })()
     );
 });

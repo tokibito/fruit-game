@@ -2,19 +2,19 @@
   "name": "Fruit Game",
   "short_name": "Fruit Game",
   "description": "幼児向けのシンプルなフルーツタップゲーム",
-  "start_url": "/",
+  "start_url": "/fruit-game/",
   "display": "standalone",
   "background_color": "#87CEEB",
   "theme_color": "#87CEEB",
   "orientation": "any",
   "icons": [
     {
-      "src": "/images/apple.png",
+      "src": "/fruit-game/images/apple.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/images/apple.png",
+      "src": "/fruit-game/images/apple.png",
       "sizes": "512x512",
       "type": "image/png"
     }

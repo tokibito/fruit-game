@@ -4,6 +4,10 @@
 
 幼児が時間を潰すためのシンプルなフルーツタップゲームです。
 
+プレイURL: https://tokibito.github.io/fruit-game/
+
+このゲームはGitHub Actionsで自動的にビルドされ、GitHub Pagesで公開されています。
+
 ## ゲームルール
 
 ### 基本動作

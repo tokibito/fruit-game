@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#87CEEB">
+    <title>Fruit Game</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            overflow: hidden;
+        }
+        #game-area {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        .fruit {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .fruit:active {
+            transform: scale(0.9);
+        }
+        .pop-effect {
+            position: absolute;
+            font-size: 48px;
+            pointer-events: none;
+            animation: pop 0.5s ease-out forwards;
+        }
+        @keyframes pop {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(2);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-sky-300 to-sky-100">
+    <!-- スコア表示 -->
+    <div id="score-display" class="absolute top-4 right-4 bg-white rounded-lg shadow-lg px-6 py-3 text-3xl font-bold text-blue-600 z-10">
+        Score: <span id="score">0</span>
+    </div>
+
+    <!-- スタート画面 -->
+    <div id="start-screen" class="flex items-center justify-center w-screen h-screen">
+        <button id="start-button" class="bg-green-500 hover:bg-green-600 text-white font-bold text-4xl px-12 py-6 rounded-full shadow-2xl transform hover:scale-105 transition">
+            スタート
+        </button>
+    </div>
+
+    <!-- ゲームエリア -->
+    <div id="game-area" class="hidden"></div>
+
+    <script>
+        let score = 0;
+        let gameActive = false;
+        let spawnInterval;
+
+        const startButton = document.getElementById('start-button');
+        const startScreen = document.getElementById('start-screen');
+        const gameArea = document.getElementById('game-area');
+        const scoreDisplay = document.getElementById('score');
+
+        // フルーツ画像のリスト
+        const fruitImages = [
+            'images/apple.png',
+            'images/banana.png'
+        ];
+
+        // スタートボタンのクリック
+        startButton.addEventListener('click', () => {
+            startScreen.classList.add('hidden');
+            gameArea.classList.remove('hidden');
+            gameActive = true;
+            startGame();
+        });
+
+        // ゲーム開始
+        function startGame() {
+            score = 0;
+            updateScore();
+            spawnFruit();
+            // 1〜2秒ごとにフルーツを生成
+            spawnInterval = setInterval(() => {
+                if (gameActive) {
+                    spawnFruit();
+                }
+            }, 1000 + Math.random() * 1000);
+        }
+
+        // スコア更新
+        function updateScore() {
+            scoreDisplay.textContent = score;
+        }
+
+        // フルーツを生成
+        function spawnFruit() {
+            const fruit = document.createElement('div');
+            fruit.className = 'fruit';
+
+            // ランダムなフルーツ画像
+            const randomFruit = fruitImages[Math.floor(Math.random() * fruitImages.length)];
+            fruit.innerHTML = `<img src="${randomFruit}" alt="fruit" class="w-full h-full object-contain">`;
+
+            // 画面外のランダムな開始位置
+            const startSide = Math.floor(Math.random() * 4); // 0:上, 1:右, 2:下, 3:左
+            let startX, startY;
+
+            switch(startSide) {
+                case 0: // 上
+                    startX = Math.random() * window.innerWidth;
+                    startY = -100;
+                    break;
+                case 1: // 右
+                    startX = window.innerWidth + 100;
+                    startY = Math.random() * window.innerHeight;
+                    break;
+                case 2: // 下
+                    startX = Math.random() * window.innerWidth;
+                    startY = window.innerHeight + 100;
+                    break;
+                case 3: // 左
+                    startX = -100;
+                    startY = Math.random() * window.innerHeight;
+                    break;
+            }
+
+            // ランダムな目標位置（画面内）
+            const targetX = Math.random() * (window.innerWidth - 100);
+            const targetY = Math.random() * (window.innerHeight - 100);
+
+            fruit.style.left = startX + 'px';
+            fruit.style.top = startY + 'px';
+
+            gameArea.appendChild(fruit);
+
+            // フルーツの移動アニメーション
+            const duration = 3000 + Math.random() * 2000; // 3〜5秒
+            const startTime = Date.now();
+
+            function moveFruit() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                const currentX = startX + (targetX - startX) * progress;
+                const currentY = startY + (targetY - startY) * progress;
+
+                fruit.style.left = currentX + 'px';
+                fruit.style.top = currentY + 'px';
+
+                if (progress < 1 && fruit.parentElement) {
+                    requestAnimationFrame(moveFruit);
+                } else if (fruit.parentElement) {
+                    // 目標地点に到達したら消える
+                    fruit.remove();
+                }
+            }
+
+            moveFruit();
+
+            // フルーツをタップしたときの処理
+            fruit.addEventListener('click', () => {
+                // スコア加算
+                score++;
+                updateScore();
+
+                // エフェクト表示
+                const effect = document.createElement('div');
+                effect.className = 'pop-effect';
+                effect.textContent = '💥';
+                effect.style.left = fruit.style.left;
+                effect.style.top = fruit.style.top;
+                gameArea.appendChild(effect);
+
+                // エフェクトとフルーツを削除
+                setTimeout(() => effect.remove(), 500);
+                fruit.remove();
+            });
+        }
+
+        // Service Workerの登録
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registered:', registration);
+                    })
+                    .catch(error => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>

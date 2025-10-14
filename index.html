@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#87CEEB">
     <title>Fruit Game</title>
     <link rel="icon" type="image/png" href="images/apple.png">
@@ -128,7 +128,7 @@
 <body>
     <!-- リセットボタン -->
     <button id="reset-button" class="hidden">
-        リセット
+        🔄
     </button>
 
     <!-- スコア表示 -->
@@ -176,10 +176,43 @@
             startGame();
         });
 
-        // リセットボタンのクリック
-        resetButton.addEventListener('click', () => {
-            resetGame();
+        // リセットボタンの長押し
+        let resetTimer = null;
+        let isResetting = false;
+
+        function startResetTimer() {
+            if (isResetting) return;
+            isResetting = true;
+            resetButton.style.transform = 'scale(0.9)';
+            resetButton.style.opacity = '0.7';
+
+            resetTimer = setTimeout(() => {
+                resetGame();
+                isResetting = false;
+                resetButton.style.transform = '';
+                resetButton.style.opacity = '';
+            }, 2000);
+        }
+
+        function cancelResetTimer() {
+            if (resetTimer) {
+                clearTimeout(resetTimer);
+                resetTimer = null;
+            }
+            isResetting = false;
+            resetButton.style.transform = '';
+            resetButton.style.opacity = '';
+        }
+
+        resetButton.addEventListener('mousedown', startResetTimer);
+        resetButton.addEventListener('mouseup', cancelResetTimer);
+        resetButton.addEventListener('mouseleave', cancelResetTimer);
+        resetButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            startResetTimer();
         });
+        resetButton.addEventListener('touchend', cancelResetTimer);
+        resetButton.addEventListener('touchcancel', cancelResetTimer);
 
         // ゲームをリセット
         function resetGame() {

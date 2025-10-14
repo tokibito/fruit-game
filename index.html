@@ -123,6 +123,31 @@
         .hidden {
             display: none !important;
         }
+        #flash-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 1.5rem 3rem;
+            border-radius: 0.5rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
     </style>
 </head>
 <body>
@@ -177,6 +202,20 @@
             resetButton.classList.remove('hidden');
             gameActive = true;
             startGame();
+
+            // Service Workerの更新チェック
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registered:', registration);
+                        // 既存のService Workerがある場合は更新をチェック
+                        registration.update();
+                    })
+                    .catch(error => {
+                        // オフラインなどのエラーは無視してゲームを続行
+                        console.warn('Service Worker registration failed:', error);
+                    });
+            }
         });
 
         // リセットボタンの長押し
@@ -354,27 +393,21 @@
             });
         }
 
-        // Service Workerの登録
+        // Service Workerからのメッセージを受け取る
         if ('serviceWorker' in navigator) {
-            // Service Workerからのメッセージを受け取る
             navigator.serviceWorker.addEventListener('message', (event) => {
                 if (event.data.type === 'VERSION_UPDATE') {
                     console.log(event.data.message);
-                    // キャッシュをクリアしてリロード
-                    window.location.reload();
+                    // フラッシュメッセージを表示
+                    const flashMessage = document.createElement('div');
+                    flashMessage.id = 'flash-message';
+                    flashMessage.textContent = '新しいバージョンに更新しています...';
+                    document.body.appendChild(flashMessage);
+                    // 1秒後にキャッシュをクリアしてリロード
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
                 }
-            });
-
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(registration => {
-                        console.log('Service Worker registered:', registration);
-                        // 既存のService Workerがある場合は更新をチェック
-                        registration.update();
-                    })
-                    .catch(error => {
-                        console.error('Service Worker registration failed:', error);
-                    });
             });
         }
     </script>

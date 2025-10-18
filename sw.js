@@ -208,23 +208,6 @@ self.addEventListener('activate', (event) => {
 
             // すべてのクライアントを制御下に置く
             await self.clients.claim();
-
-            // バージョンチェック（オンライン時のみ）
-            try {
-                const needsUpdate = await checkVersion();
-                if (needsUpdate) {
-                    // すべてのクライアントにリロードを通知
-                    const clients = await self.clients.matchAll();
-                    clients.forEach(client => {
-                        client.postMessage({
-                            type: 'VERSION_UPDATE',
-                            message: 'New version available, reloading...'
-                        });
-                    });
-                }
-            } catch (error) {
-                console.log('Version check failed (probably offline):', error);
-            }
         })()
     );
 });

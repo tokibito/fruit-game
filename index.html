@@ -194,6 +194,115 @@
             'images/orange.png'
         ];
 
+        // ページ読み込み時にService Workerを登録してバージョンチェック
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+                .then(registration => {
+                    console.log('Service Worker registered:', registration);
+                    // バージョンチェックを実行
+                    checkVersionUpdate();
+                })
+                .catch(error => {
+                    console.warn('Service Worker registration failed:', error);
+                });
+        }
+
+        // バージョンチェック関数
+        async function checkVersionUpdate() {
+            try {
+                // IndexedDBからバージョンを取得
+                const db = await openIndexedDB();
+                const currentVersion = await getVersionFromDB(db);
+
+                // サーバーから最新バージョンを取得
+                const response = await fetch('./version.json');
+                if (!response.ok) {
+                    console.log('Version file not found, skipping version check');
+                    return;
+                }
+
+                const versionData = await response.json();
+                const newVersion = versionData.version;
+
+                console.log('Current version:', currentVersion);
+                console.log('New version:', newVersion);
+
+                if (currentVersion && currentVersion !== newVersion) {
+                    console.log('Version changed, reloading app...');
+                    // フラッシュメッセージを表示
+                    const flashMessage = document.createElement('div');
+                    flashMessage.id = 'flash-message';
+                    flashMessage.textContent = '新しいバージョンに更新しています...';
+                    document.body.appendChild(flashMessage);
+
+                    // バージョンを更新
+                    await saveVersionToDB(db, newVersion);
+
+                    // 1秒後にリロード
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else if (!currentVersion) {
+                    // 初回起動時
+                    await saveVersionToDB(db, newVersion);
+                    console.log('Initial version saved:', newVersion);
+                }
+            } catch (error) {
+                console.error('Version check failed:', error);
+            }
+        }
+
+        // IndexedDBを開く
+        function openIndexedDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('fruit-game-db', 2);
+
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains('resources')) {
+                        db.createObjectStore('resources', { keyPath: 'url' });
+                    }
+                    if (!db.objectStoreNames.contains('version')) {
+                        db.createObjectStore('version', { keyPath: 'key' });
+                    }
+                };
+            });
+        }
+
+        // IndexedDBからバージョンを取得
+        function getVersionFromDB(db) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('version', 'readonly');
+                const store = tx.objectStore('version');
+                const request = store.get('current');
+
+                request.onsuccess = () => {
+                    resolve(request.result?.version || null);
+                };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // IndexedDBにバージョンを保存
+        function saveVersionToDB(db, version) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('version', 'readwrite');
+                const store = tx.objectStore('version');
+
+                store.put({
+                    key: 'current',
+                    version: version,
+                    timestamp: Date.now()
+                });
+
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+
         // スタートボタンのクリック
         startButton.addEventListener('click', () => {
             startScreen.classList.add('hidden');
@@ -202,20 +311,6 @@
             resetButton.classList.remove('hidden');
             gameActive = true;
             startGame();
-
-            // Service Workerの更新チェック
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(registration => {
-                        console.log('Service Worker registered:', registration);
-                        // 既存のService Workerがある場合は更新をチェック
-                        registration.update();
-                    })
-                    .catch(error => {
-                        // オフラインなどのエラーは無視してゲームを続行
-                        console.warn('Service Worker registration failed:', error);
-                    });
-            }
         });
 
         // リセットボタンの長押し
@@ -390,24 +485,6 @@
                 setTimeout(() => effect.remove(), 500);
                 fruit.remove();
                 fruitCount--;
-            });
-        }
-
-        // Service Workerからのメッセージを受け取る
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.addEventListener('message', (event) => {
-                if (event.data.type === 'VERSION_UPDATE') {
-                    console.log(event.data.message);
-                    // フラッシュメッセージを表示
-                    const flashMessage = document.createElement('div');
-                    flashMessage.id = 'flash-message';
-                    flashMessage.textContent = '新しいバージョンに更新しています...';
-                    document.body.appendChild(flashMessage);
-                    // 1秒後にキャッシュをクリアしてリロード
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
-                }
             });
         }
     </script>

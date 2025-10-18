@@ -17,7 +17,7 @@
         html, body {
             overflow: hidden;
             font-family: system-ui, -apple-system, sans-serif;
-            background: linear-gradient(to bottom, #7dd3fc, #bae6fd);
+            background: linear-gradient(to bottom, #86efac, #22c55e);
             width: 100vw;
             height: 100vh;
         }
@@ -60,31 +60,35 @@
         }
         #score-display {
             position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background: white;
-            border-radius: 0.5rem;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(255, 255, 255, 0.75);
+            border-radius: 0.375rem;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            padding: 0.75rem 1.5rem;
-            font-size: 1.875rem;
+            padding: 0.25rem 0.5rem;
+            font-size: 1.125rem;
             font-weight: bold;
+            font-family: 'Courier New', Courier, monospace;
             color: #2563eb;
             z-index: 10;
         }
         #reset-button {
             position: absolute;
-            top: 1rem;
-            left: 1rem;
+            top: 0.5rem;
+            left: 0.5rem;
             background: #ef4444;
             color: white;
             border: none;
-            border-radius: 0.5rem;
-            padding: 0.75rem 1.5rem;
-            font-size: 1.125rem;
+            border-radius: 0.375rem;
+            padding: 0.5rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            font-size: 1.25rem;
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            transition: background 0.2s, transform 0.1s;
+            transition: background 0.2s, transform 0.1s, opacity 0.2s;
+            opacity: 0.5;
             z-index: 10;
         }
         #reset-button:hover {
@@ -102,7 +106,7 @@
             height: 100vh;
         }
         #start-button {
-            background: #22c55e;
+            background: #0ea5e9;
             color: white;
             border: none;
             font-weight: bold;
@@ -114,7 +118,7 @@
             transition: background 0.2s, transform 0.1s;
         }
         #start-button:hover {
-            background: #16a34a;
+            background: #0284c7;
             transform: scale(1.05);
         }
         #start-button:active {
@@ -158,13 +162,13 @@
 
     <!-- スコア表示 -->
     <div id="score-display" class="hidden">
-        Score: <span id="score">0</span>
+        SCORE <span id="score">0</span>
     </div>
 
     <!-- スタート画面 -->
     <div id="start-screen">
         <button id="start-button">
-            スタート
+            START
         </button>
     </div>
 
@@ -321,7 +325,7 @@
             if (isResetting) return;
             isResetting = true;
             resetButton.style.transform = 'scale(0.9)';
-            resetButton.style.opacity = '0.7';
+            resetButton.style.opacity = '1';
 
             resetTimer = setTimeout(() => {
                 resetGame();

@@ -11,6 +11,11 @@ const RESOURCES_TO_CACHE = [
     './manifest.json',
     './images/apple.png',
     './images/banana.png',
+    './images/grape.png',
+    './images/kiwi.png',
+    './images/orange.png',
+    './images/melon.png',
+    './images/pineapple.png',
     './version.json'
 ];
 

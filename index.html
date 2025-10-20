@@ -17,7 +17,7 @@
         html, body {
             overflow: hidden;
             font-family: system-ui, -apple-system, sans-serif;
-            background: linear-gradient(to bottom, #86efac, #22c55e);
+            background: linear-gradient(to bottom, #7dd3fc, #bae6fd);
             width: 100vw;
             height: 100vh;
         }
@@ -484,8 +484,12 @@
             // フルーツの移動アニメーション
             const duration = 3000 + Math.random() * 2000; // 3〜5秒
             const startTime = Date.now();
+            let animationId = null;
+            let isDragging = false;
 
             function moveFruit() {
+                if (isDragging) return; // ドラッグ中はアニメーションしない
+
                 const elapsed = Date.now() - startTime;
                 const progress = Math.min(elapsed / duration, 1);
 
@@ -497,31 +501,143 @@
 
                 // 目標地点に到達するまでアニメーション継続
                 if (progress < 1 && fruit.parentElement) {
-                    requestAnimationFrame(moveFruit);
+                    animationId = requestAnimationFrame(moveFruit);
                 }
                 // 目標地点に到達したら停止（削除しない）
             }
 
             moveFruit();
 
-            // フルーツをタップしたときの処理
-            fruit.addEventListener('click', () => {
-                // スコア加算
-                score++;
-                updateScore();
+            // ドラッグ機能の実装（マルチタッチ対応）
+            let offsetX, offsetY;
+            let dragStarted = false;
+            let activeTouchId = null; // このフルーツを掴んでいるタッチのID
 
-                // エフェクト表示
-                const effect = document.createElement('div');
-                effect.className = 'pop-effect';
-                effect.textContent = '💥';
-                effect.style.left = fruit.style.left;
-                effect.style.top = fruit.style.top;
-                gameArea.appendChild(effect);
+            function startDrag(e) {
+                // タッチイベントの場合
+                if (e.type.includes('touch')) {
+                    // 既に他のタッチで掴まれている場合は無視
+                    if (activeTouchId !== null) return;
 
-                // エフェクトを削除、フルーツを削除してカウント減少
-                setTimeout(() => effect.remove(), 500);
-                fruit.remove();
-                fruitCount--;
+                    // このフルーツに触れた最初のタッチを記録
+                    const touch = e.touches[0];
+                    activeTouchId = touch.identifier;
+
+                    const rect = fruit.getBoundingClientRect();
+                    offsetX = touch.clientX - rect.left;
+                    offsetY = touch.clientY - rect.top;
+                } else {
+                    // マウスイベントの場合
+                    offsetX = e.clientX - fruit.getBoundingClientRect().left;
+                    offsetY = e.clientY - fruit.getBoundingClientRect().top;
+                }
+
+                isDragging = true;
+                dragStarted = false;
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                }
+
+                fruit.style.transform = 'scale(1.2)';
+                fruit.style.zIndex = '1000';
+
+                e.preventDefault();
+            }
+
+            function drag(e) {
+                if (!isDragging) return;
+
+                if (e.type.includes('touch')) {
+                    // マルチタッチ対応: このフルーツを掴んでいるタッチだけを処理
+                    let currentTouch = null;
+                    for (let i = 0; i < e.touches.length; i++) {
+                        if (e.touches[i].identifier === activeTouchId) {
+                            currentTouch = e.touches[i];
+                            break;
+                        }
+                    }
+
+                    // このフルーツのタッチが見つからない場合は何もしない
+                    if (!currentTouch) return;
+
+                    dragStarted = true;
+                    const newX = currentTouch.clientX - offsetX;
+                    const newY = currentTouch.clientY - offsetY;
+                    fruit.style.left = newX + 'px';
+                    fruit.style.top = newY + 'px';
+                } else {
+                    // マウスイベントの場合
+                    dragStarted = true;
+                    const newX = e.clientX - offsetX;
+                    const newY = e.clientY - offsetY;
+                    fruit.style.left = newX + 'px';
+                    fruit.style.top = newY + 'px';
+                }
+
+                e.preventDefault();
+            }
+
+            function endDrag(e) {
+                if (!isDragging) return;
+
+                // タッチイベントの場合、このフルーツのタッチが終了したか確認
+                if (e.type.includes('touch')) {
+                    let thisTouchEnded = false;
+                    for (let i = 0; i < e.changedTouches.length; i++) {
+                        if (e.changedTouches[i].identifier === activeTouchId) {
+                            thisTouchEnded = true;
+                            break;
+                        }
+                    }
+
+                    // このフルーツのタッチじゃない場合は何もしない
+                    if (!thisTouchEnded) return;
+
+                    activeTouchId = null; // タッチIDをリセット
+                }
+
+                isDragging = false;
+                fruit.style.transform = '';
+                fruit.style.zIndex = '';
+
+                // ドラッグせずにタップだけの場合は消す
+                if (!dragStarted) {
+                    // スコア加算
+                    score++;
+                    updateScore();
+
+                    // エフェクト表示
+                    const effect = document.createElement('div');
+                    effect.className = 'pop-effect';
+                    effect.textContent = '💥';
+                    effect.style.left = fruit.style.left;
+                    effect.style.top = fruit.style.top;
+                    gameArea.appendChild(effect);
+
+                    // エフェクトを削除、フルーツを削除してカウント減少
+                    setTimeout(() => effect.remove(), 500);
+                    fruit.remove();
+                    fruitCount--;
+                }
+
+                e.preventDefault();
+            }
+
+            // タッチイベント（マルチタッチ対応）
+            fruit.addEventListener('touchstart', startDrag, { passive: false });
+            fruit.addEventListener('touchmove', drag, { passive: false });
+            fruit.addEventListener('touchend', endDrag, { passive: false });
+            fruit.addEventListener('touchcancel', endDrag, { passive: false });
+
+            // マウスイベント（PCでのテスト用）
+            fruit.addEventListener('mousedown', startDrag);
+            document.addEventListener('mousemove', function mouseMoveHandler(e) {
+                if (isDragging) drag(e);
+            });
+            document.addEventListener('mouseup', function mouseUpHandler(e) {
+                if (isDragging) {
+                    endDrag(e);
+                }
             });
         }
     </script>

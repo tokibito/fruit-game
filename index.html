@@ -121,6 +121,12 @@
             width: 100vw;
             height: 100vh;
         }
+        #game-logo {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+        }
         #game-title {
             font-size: 4rem;
             font-weight: bold;
@@ -198,6 +204,7 @@
 
     <!-- スタート画面 -->
     <div id="start-screen">
+        <img id="game-logo" src="images/apple.png" alt="Fruit Game Logo">
         <h1 id="game-title">Fruit Game</h1>
         <button id="start-button">
             START

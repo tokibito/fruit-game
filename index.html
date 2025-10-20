@@ -522,13 +522,26 @@
                     // 既に他のタッチで掴まれている場合は無視
                     if (activeTouchId !== null) return;
 
-                    // このフルーツに触れた最初のタッチを記録
-                    const touch = e.touches[0];
-                    activeTouchId = touch.identifier;
-
                     const rect = fruit.getBoundingClientRect();
-                    offsetX = touch.clientX - rect.left;
-                    offsetY = touch.clientY - rect.top;
+
+                    // このフルーツの領域に触れているタッチを探す
+                    let targetTouch = null;
+                    for (let i = 0; i < e.touches.length; i++) {
+                        const touch = e.touches[i];
+                        // タッチ位置がこのフルーツの範囲内かチェック
+                        if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+                            touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+                            targetTouch = touch;
+                            break;
+                        }
+                    }
+
+                    // このフルーツに触れているタッチが見つからない場合は何もしない
+                    if (!targetTouch) return;
+
+                    activeTouchId = targetTouch.identifier;
+                    offsetX = targetTouch.clientX - rect.left;
+                    offsetY = targetTouch.clientY - rect.top;
                 } else {
                     // マウスイベントの場合
                     offsetX = e.clientX - fruit.getBoundingClientRect().left;

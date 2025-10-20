@@ -148,6 +148,13 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
         (async () => {
             try {
+                // version.json は常にネットワークから取得（バージョンチェックのため）
+                if (event.request.url.includes('version.json')) {
+                    console.log('Service Worker: Fetching version.json from network');
+                    const networkResponse = await fetch(event.request);
+                    return networkResponse;
+                }
+
                 // まずCache APIから試す
                 const cachedResponse = await caches.match(event.request);
                 if (cachedResponse) {

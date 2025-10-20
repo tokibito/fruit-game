@@ -114,10 +114,18 @@
         }
         #start-screen {
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
+            gap: 3rem;
             width: 100vw;
             height: 100vh;
+        }
+        #game-title {
+            font-size: 4rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
         #start-button {
             background: #0ea5e9;
@@ -125,7 +133,7 @@
             border: none;
             font-weight: bold;
             font-size: 2.25rem;
-            padding: 1.5rem 3rem;
+            padding: 2.5rem 5rem;
             border-radius: 9999px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
             cursor: pointer;
@@ -181,6 +189,7 @@
 
     <!-- スタート画面 -->
     <div id="start-screen">
+        <h1 id="game-title">Fruit Game</h1>
         <button id="start-button">
             START
         </button>

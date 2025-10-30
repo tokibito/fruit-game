@@ -485,7 +485,7 @@
             }
 
             totalSpawnedFruits++;
-            const isSpecial = totalSpawnedFruits % 100 === 0; // 100個目ごとに特別なフルーツ
+            const isSpecial = totalSpawnedFruits % 50 === 0; // 50個目ごとに特別なフルーツ
 
             const fruit = document.createElement('div');
             fruit.className = isSpecial ? 'fruit special-fruit' : 'fruit';

@@ -387,7 +387,17 @@
             scoreDisplayContainer.classList.remove('hidden');
             resetButton.classList.remove('hidden');
             gameActive = true;
+            // 戻るボタン対策: 履歴にダミーエントリを積み、ゲーム中の離脱を捕捉できるようにする
+            history.pushState({ screen: 'game' }, '');
             startGame();
+        });
+
+        // 戻るボタン（特にAndroidの画面ピン留め時）でゲームがリセット/離脱されないようにする。
+        // ゲーム中はダミーエントリを積み直してゲーム画面に留める。
+        window.addEventListener('popstate', () => {
+            if (gameActive) {
+                history.pushState({ screen: 'game' }, '');
+            }
         });
 
         // リセットボタンの長押し

@@ -221,6 +221,23 @@
         let fruitCount = 0;
         let totalSpawnedFruits = 0; // 総出現数をカウント
         const MAX_FRUITS = 10;
+        const STORAGE_KEY = 'fruit-game-state';
+
+        // ゲーム状態を保存（戻るボタン等で再読み込みされても復元できるようにする）
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    started: gameActive,
+                    score: score,
+                    totalSpawnedFruits: totalSpawnedFruits
+                }));
+            } catch (e) { /* ストレージが使えなくても続行 */ }
+        }
+
+        // ゲーム状態をクリア
+        function clearState() {
+            try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+        }
 
         const startButton = document.getElementById('start-button');
         const startScreen = document.getElementById('start-screen');
@@ -387,17 +404,8 @@
             scoreDisplayContainer.classList.remove('hidden');
             resetButton.classList.remove('hidden');
             gameActive = true;
-            // 戻るボタン対策: 履歴にダミーエントリを積み、ゲーム中の離脱を捕捉できるようにする
-            history.pushState({ screen: 'game' }, '');
+            saveState();
             startGame();
-        });
-
-        // 戻るボタン（特にAndroidの画面ピン留め時）でゲームがリセット/離脱されないようにする。
-        // ゲーム中はダミーエントリを積み直してゲーム画面に留める。
-        window.addEventListener('popstate', () => {
-            if (gameActive) {
-                history.pushState({ screen: 'game' }, '');
-            }
         });
 
         // リセットボタンの長押し
@@ -461,14 +469,15 @@
             totalSpawnedFruits = 0;
             updateScore();
 
+            // 保存していたゲーム状態をクリア
+            clearState();
+
             // バージョンチェックを実行
             checkVersionUpdate();
         }
 
-        // ゲーム開始
-        function startGame() {
-            score = 0;
-            updateScore();
+        // フルーツの生成ループを開始（スコアはリセットしない）
+        function startSpawning() {
             spawnFruit();
             // 1〜2秒ごとにフルーツを生成
             spawnInterval = setInterval(() => {
@@ -478,9 +487,18 @@
             }, 1000 + Math.random() * 1000);
         }
 
+        // ゲーム開始（新規）
+        function startGame() {
+            score = 0;
+            totalSpawnedFruits = 0;
+            updateScore();
+            startSpawning();
+        }
+
         // スコア更新
         function updateScore() {
             scoreDisplay.textContent = score;
+            saveState();
         }
 
         // フルーツを生成
@@ -495,6 +513,7 @@
             }
 
             totalSpawnedFruits++;
+            saveState();
             const isSpecial = totalSpawnedFruits % 50 === 0; // 50個目ごとに特別なフルーツ
 
             const fruit = document.createElement('div');
@@ -722,6 +741,25 @@
                 }
             });
         }
+
+        // 読み込み時に保存済みの状態を復元する。
+        // 戻るボタン等でページが再読み込み（またはPWAが再起動）されても、
+        // スコアと進行を維持してゲーム画面から続行できるようにする。
+        (function restoreState() {
+            let saved = null;
+            try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch (e) {}
+            if (saved && saved.started) {
+                score = saved.score || 0;
+                totalSpawnedFruits = saved.totalSpawnedFruits || 0;
+                startScreen.classList.add('hidden');
+                gameArea.classList.remove('hidden');
+                scoreDisplayContainer.classList.remove('hidden');
+                resetButton.classList.remove('hidden');
+                gameActive = true;
+                updateScore();
+                startSpawning(); // スコアを消さずにフルーツ生成を再開
+            }
+        })();
     </script>
 </body>
 </html>

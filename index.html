@@ -161,6 +161,19 @@
         #start-button:active {
             transform: scale(0.95);
         }
+        #version-info {
+            position: fixed;
+            top: 0.75rem;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            opacity: 0.35;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            pointer-events: none;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
         .hidden {
             display: none !important;
         }
@@ -204,6 +217,7 @@
 
     <!-- スタート画面 -->
     <div id="start-screen">
+        <div id="version-info"></div>
         <img id="game-logo" src="images/apple.png" alt="Fruit Game Logo">
         <h1 id="game-title">Fruit Game</h1>
         <button id="start-button">
@@ -256,6 +270,22 @@
             'images/melon.png',
             'images/pineapple.png'
         ];
+
+        // スタート画面にバージョン情報をうっすら表示
+        async function displayVersionInfo() {
+            const versionInfo = document.getElementById('version-info');
+            try {
+                const response = await fetch('./version.json', { cache: 'no-store' });
+                if (!response.ok) {
+                    return;
+                }
+                const versionData = await response.json();
+                versionInfo.textContent = 'ver. ' + versionData.version;
+            } catch (error) {
+                console.warn('Failed to display version info:', error);
+            }
+        }
+        displayVersionInfo();
 
         // ページ読み込み時にService Workerを登録してバージョンチェック
         if ('serviceWorker' in navigator) {

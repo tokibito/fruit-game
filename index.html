@@ -302,6 +302,20 @@
         const scoreDisplayContainer = document.getElementById('score-display');
         const resetButton = document.getElementById('reset-button');
 
+        // 効果音
+        // effect_15_dogyun: 通常フルーツを消したとき
+        // effect_37_kirarin: ボーナスフルーツを消したとき
+        const SOUND_NORMAL = 'sounds/effect_15_dogyun.mp3';
+        const SOUND_BONUS = 'sounds/effect_37_kirarin.mp3';
+
+        // 連続で消しても重なって鳴るように、再生のたびに複製して再生する
+        function playSound(src) {
+            try {
+                const audio = new Audio(src);
+                audio.play().catch(() => { /* 自動再生がブロックされても続行 */ });
+            } catch (e) { /* 音が鳴らせなくても続行 */ }
+        }
+
         // フルーツ画像のリスト
         const fruitImages = [
             'images/apple.png',
@@ -773,6 +787,9 @@
                     const isSpecial = fruit.hasAttribute('data-special');
                     score += isSpecial ? 10 : 1;
                     updateScore();
+
+                    // 効果音再生（ボーナスフルーツはキラリン、通常はドギュン）
+                    playSound(isSpecial ? SOUND_BONUS : SOUND_NORMAL);
 
                     // エフェクト表示
                     const effect = document.createElement('div');

@@ -56,6 +56,48 @@
                 transform: scale(1.1);
             }
         }
+        .sparkle {
+            position: absolute;
+            pointer-events: none;
+            width: 18px;
+            height: 18px;
+            margin-left: -9px;
+            margin-top: -9px;
+            background: radial-gradient(circle, #fff 0%, #fff6b0 35%, rgba(255, 215, 0, 0) 70%);
+            border-radius: 50%;
+            z-index: 5;
+            will-change: transform, opacity;
+            animation: sparkle-fade 2s ease-out forwards;
+        }
+        .sparkle::before,
+        .sparkle::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 140%;
+            height: 3px;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(to right, rgba(255, 255, 255, 0), #fff, rgba(255, 255, 255, 0));
+            border-radius: 2px;
+        }
+        .sparkle::after {
+            transform: translate(-50%, -50%) rotate(90deg);
+        }
+        @keyframes sparkle-fade {
+            0% {
+                opacity: 0;
+                transform: scale(0.2) rotate(0deg);
+            }
+            15% {
+                opacity: 1;
+                transform: scale(1) rotate(20deg);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.4) rotate(90deg);
+            }
+        }
         .pop-effect {
             position: absolute;
             font-size: 48px;
@@ -771,6 +813,101 @@
                 }
             });
         }
+
+        // キラキラ軌跡エフェクト
+        // フルーツ以外の場所を触ったときに、指（カーソル）の位置にキラキラを表示する。
+        // タッチしたまま動かすと軌跡のようにキラキラが追加され、2秒かけて消えていく。
+        // 何もないところを触っても画面に動きが出るようにするための演出。
+        const SPARKLE_COLORS = ['#fff6b0', '#bae6fd', '#fbcfe8', '#d9f99d', '#fff'];
+        // 軌跡として追加する最小移動距離（短すぎる移動で大量に生成しないため）
+        const SPARKLE_MIN_DISTANCE = 14;
+        // 直前にキラキラを生成した位置（ポインタ/タッチIDごと）
+        const lastSparklePos = {};
+
+        // 指定座標がフルーツ上かどうかを判定（フルーツ上では軌跡を出さない）
+        function isOnFruit(x, y) {
+            const el = document.elementFromPoint(x, y);
+            return !!(el && el.closest && el.closest('.fruit'));
+        }
+
+        // 1粒のキラキラを生成
+        function createSparkle(x, y) {
+            const sparkle = document.createElement('div');
+            sparkle.className = 'sparkle';
+            // 少しランダムにずらして自然な散らばりにする
+            const jitterX = (Math.random() - 0.5) * 16;
+            const jitterY = (Math.random() - 0.5) * 16;
+            sparkle.style.left = (x + jitterX) + 'px';
+            sparkle.style.top = (y + jitterY) + 'px';
+            // サイズと色をランダムに
+            const size = 12 + Math.random() * 14;
+            sparkle.style.width = size + 'px';
+            sparkle.style.height = size + 'px';
+            sparkle.style.marginLeft = (-size / 2) + 'px';
+            sparkle.style.marginTop = (-size / 2) + 'px';
+            const color = SPARKLE_COLORS[Math.floor(Math.random() * SPARKLE_COLORS.length)];
+            sparkle.style.background =
+                'radial-gradient(circle, #fff 0%, ' + color + ' 35%, rgba(255, 215, 0, 0) 70%)';
+            gameArea.appendChild(sparkle);
+            // 2秒後（アニメーション終了後）に削除
+            setTimeout(() => sparkle.remove(), 2000);
+        }
+
+        // タッチ/カーソル開始時にキラキラを表示
+        function spawnSparkleAt(x, y, key) {
+            if (isOnFruit(x, y)) return;
+            createSparkle(x, y);
+            lastSparklePos[key] = { x, y };
+        }
+
+        // 移動時、一定距離ごとにキラキラを追加して軌跡をつくる
+        function trailSparkleAt(x, y, key) {
+            const last = lastSparklePos[key];
+            if (last) {
+                const dx = x - last.x;
+                const dy = y - last.y;
+                if (dx * dx + dy * dy < SPARKLE_MIN_DISTANCE * SPARKLE_MIN_DISTANCE) return;
+            }
+            if (isOnFruit(x, y)) return;
+            createSparkle(x, y);
+            lastSparklePos[key] = { x, y };
+        }
+
+        // タッチ操作（マルチタッチ対応）
+        gameArea.addEventListener('touchstart', (e) => {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const t = e.changedTouches[i];
+                spawnSparkleAt(t.clientX, t.clientY, 'touch-' + t.identifier);
+            }
+        }, { passive: true });
+        gameArea.addEventListener('touchmove', (e) => {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const t = e.changedTouches[i];
+                trailSparkleAt(t.clientX, t.clientY, 'touch-' + t.identifier);
+            }
+        }, { passive: true });
+        function clearTouchSparkleKeys(e) {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                delete lastSparklePos['touch-' + e.changedTouches[i].identifier];
+            }
+        }
+        gameArea.addEventListener('touchend', clearTouchSparkleKeys, { passive: true });
+        gameArea.addEventListener('touchcancel', clearTouchSparkleKeys, { passive: true });
+
+        // マウス操作（PCでのテスト用）
+        let mouseSparkleDown = false;
+        gameArea.addEventListener('mousedown', (e) => {
+            mouseSparkleDown = true;
+            spawnSparkleAt(e.clientX, e.clientY, 'mouse');
+        });
+        gameArea.addEventListener('mousemove', (e) => {
+            if (!mouseSparkleDown) return;
+            trailSparkleAt(e.clientX, e.clientY, 'mouse');
+        });
+        document.addEventListener('mouseup', () => {
+            mouseSparkleDown = false;
+            delete lastSparklePos['mouse'];
+        });
 
         // 読み込み時に保存済みの状態を復元する。
         // 戻るボタン等でページが再読み込み（またはPWAが再起動）されても、

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fruit-game-v6';
+const CACHE_NAME = 'fruit-game-v7';
 const DB_NAME = 'fruit-game-db';
 const DB_VERSION = 2;
 const STORE_NAME = 'resources';
@@ -18,6 +18,7 @@ const RESOURCES_TO_CACHE = [
     './images/pineapple.png',
     './sounds/effect_15_dogyun.mp3',
     './sounds/effect_37_kirarin.mp3',
+    './sounds/bgm.mp3',
     './version.json'
 ];
 

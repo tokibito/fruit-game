@@ -316,6 +316,30 @@
             } catch (e) { /* 音が鳴らせなくても続行 */ }
         }
 
+        // BGM（プレイ中にループ再生）
+        const BGM_SRC = 'sounds/bgm.mp3';
+        let bgmAudio = null;
+
+        function startBgm() {
+            try {
+                if (!bgmAudio) {
+                    bgmAudio = new Audio(BGM_SRC);
+                    bgmAudio.loop = true;
+                    bgmAudio.volume = 0.4;
+                }
+                bgmAudio.play().catch(() => { /* 自動再生がブロックされても続行 */ });
+            } catch (e) { /* BGMが鳴らせなくても続行 */ }
+        }
+
+        function stopBgm() {
+            try {
+                if (bgmAudio) {
+                    bgmAudio.pause();
+                    bgmAudio.currentTime = 0;
+                }
+            } catch (e) { /* 続行 */ }
+        }
+
         // フルーツ画像のリスト
         const fruitImages = [
             'images/apple.png',
@@ -491,6 +515,7 @@
             resetButton.classList.remove('hidden');
             gameActive = true;
             saveState();
+            startBgm();
             startGame();
         });
 
@@ -539,6 +564,9 @@
             if (spawnInterval) {
                 clearInterval(spawnInterval);
             }
+
+            // BGMを停止
+            stopBgm();
 
             // すべてのフルーツとエフェクトを削除
             gameArea.innerHTML = '';
@@ -941,6 +969,15 @@
                 resetButton.classList.remove('hidden');
                 gameActive = true;
                 updateScore();
+                startBgm(); // BGMを再開
+                // 自動再生がブロックされた場合に備え、最初の操作でBGMを開始する
+                const resumeBgmOnce = () => {
+                    if (gameActive) startBgm();
+                    document.removeEventListener('pointerdown', resumeBgmOnce);
+                    document.removeEventListener('touchstart', resumeBgmOnce);
+                };
+                document.addEventListener('pointerdown', resumeBgmOnce);
+                document.addEventListener('touchstart', resumeBgmOnce);
                 startSpawning(); // スコアを消さずにフルーツ生成を再開
             }
         })();

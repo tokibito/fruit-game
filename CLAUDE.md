@@ -14,13 +14,23 @@
 
 ### ファイル構成
 
-- `index.html` - メインゲームファイル（HTML/CSS/JavaScript全て含む）
-- `images/` - フルーツ画像（apple.png, banana.png, grape.png, kiwi.png, orange.png, melon.png, pineapple.png）
-- `sw.js` - Service Worker（オフライン対応用）
-- `manifest.json` - PWAマニフェスト
-- `version.json` - バージョン管理
+公開されるファイルは `public_html/` フォルダにまとめられています。GitHub Pages へは `public_html/` の内容のみがデプロイされます。
+
+#### 公開ファイル（`public_html/`）
+
+- `public_html/index.html` - メインゲームファイル（HTML/CSS/JavaScript全て含む）
+- `public_html/images/` - フルーツ画像（apple.png, banana.png, grape.png, kiwi.png, orange.png, melon.png, pineapple.png）
+- `public_html/sounds/` - 効果音・BGM（effect_15_dogyun.mp3, effect_37_kirarin.mp3, bgm.mp3）
+- `public_html/sw.js` - Service Worker（オフライン対応用）
+- `public_html/manifest.json` - PWAマニフェスト
+- `public_html/version.json` - バージョン管理
+
+#### 開発用ファイル（リポジトリ直下、非公開）
+
+- `README.md` - プロジェクト概要
 - `spec.md` - ゲーム仕様書
 - `CLAUDE.md` - 開発指針（本ファイル）
+- `.github/workflows/static.yml` - GitHub Pages デプロイ設定
 
 ### 主な機能
 

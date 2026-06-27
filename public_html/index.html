@@ -325,7 +325,7 @@
                 if (!bgmAudio) {
                     bgmAudio = new Audio(BGM_SRC);
                     bgmAudio.loop = true;
-                    bgmAudio.volume = 0.4;
+                    bgmAudio.volume = 0.9;
                 }
                 bgmAudio.play().catch(() => { /* 自動再生がブロックされても続行 */ });
             } catch (e) { /* BGMが鳴らせなくても続行 */ }

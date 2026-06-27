@@ -1,9 +1,11 @@
 package io.github.tokibito.fruitgame
 
 import android.annotation.SuppressLint
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -49,8 +51,18 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // ナビゲーションは WebView 内に閉じ込め、ブラウザは起動しない
-        webView.webViewClient = WebViewClient()
+        // ナビゲーションは WebView 内に閉じ込め、ブラウザは起動しない。
+        // 既定のサイト（GitHub Pages）以外への遷移はブロックする。
+        webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(
+                view: WebView,
+                request: WebResourceRequest
+            ): Boolean {
+                // 許可された URL なら WebView 内でそのまま読み込ませる（false = ブロックしない）。
+                // それ以外（外部リンクなど）は遷移をキャンセルする（true = 上書きして何もしない）。
+                return !isAllowedUrl(request.url)
+            }
+        }
         webView.webChromeClient = WebChromeClient()
 
         // 遊んでいる間は画面を消さない（幼児向けのため）
@@ -110,6 +122,19 @@ class MainActivity : AppCompatActivity() {
                 or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                 or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
             )
+    }
+
+    /**
+     * 既定のサイト内への遷移かどうかを判定する。
+     *
+     * スキーム（https）・ホスト（tokibito.github.io）・パスの接頭辞（/fruit-game/）が
+     * すべて一致する場合のみ許可し、それ以外への遷移はブロックする。
+     */
+    private fun isAllowedUrl(uri: Uri): Boolean {
+        val base = Uri.parse(GAME_URL)
+        return uri.scheme.equals(base.scheme, ignoreCase = true) &&
+            uri.host.equals(base.host, ignoreCase = true) &&
+            (uri.path ?: "").startsWith(base.path ?: "")
     }
 
     companion object {

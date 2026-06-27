@@ -35,6 +35,13 @@ https://tokibito.github.io/fruit-game/
 - IndexedDB（キャッシュ管理）
 - PWA（Progressive Web App）
 
+## Android アプリ
+
+公開サイトを WebView で表示する Android 向けガワアプリ（ラッパーアプリ）を `android/` に用意しています。
+ゲーム本体は `public_html/` のものをそのまま使うため、ゲームの修正はサイトを更新するだけでアプリにも反映されます（アプリ再ビルド不要）。
+
+詳細は [android/README.md](android/README.md)（アーキテクチャ・ビルド・リリース・トラブルシュートの各ドキュメントへの入口）を参照してください。
+
 ## 開発
 
 詳細な仕様は[spec.md](spec.md)を参照してください。

@@ -64,3 +64,13 @@
 - Service Workerでアプリケーションの静的リソース（HTML、CSS、JavaScript、画像）をキャッシュ
 - 初回アクセス時にリソースをIndexedDBに保存
 - オフライン時はキャッシュからリソースを読み込む
+
+## Android アプリ
+
+公開サイトを WebView で表示するだけの Android ガワアプリ（ラッパーアプリ）を `android/` に用意している。
+
+- ゲーム本体は再実装せず、GitHub Pages（`public_html/` の内容）をそのまま読み込む
+- オフライン対応はサイト側の Service Worker / IndexedDB をそのまま利用する
+- ゲームの仕様変更はサイト更新だけでアプリにも反映され、アプリの再ビルドは不要
+
+詳細な構成・ビルド・配布手順は [android/README.md](android/README.md) および `android/docs/` を参照。

@@ -25,12 +25,22 @@
 - `public_html/manifest.json` - PWAマニフェスト
 - `public_html/version.json` - バージョン管理
 
+#### Android ガワアプリ（`android/`）
+
+公開サイトを WebView で表示するだけの Android ラッパーアプリです。ゲーム本体は再実装せず `public_html/` を GitHub Pages 経由で読み込むため、ゲームの修正はサイト更新だけでアプリにも反映されます（アプリ再ビルド不要）。
+
+- `android/MainActivity.kt`（`app/src/main/java/io/github/tokibito/fruitgame/`）- WebView を構築する唯一の Activity
+- `android/app/build.gradle.kts` - SDK・依存関係・バージョン設定
+- `android/README.md` - Android アプリのドキュメント入口
+- `android/docs/` - アーキテクチャ・ビルド・リリース・トラブルシュートの各ドキュメント
+
 #### 開発用ファイル（リポジトリ直下、非公開）
 
 - `README.md` - プロジェクト概要
 - `spec.md` - ゲーム仕様書
 - `CLAUDE.md` - 開発指針（本ファイル）
 - `.github/workflows/static.yml` - GitHub Pages デプロイ設定
+- `.github/workflows/android.yml` - Android デバッグ APK の自動ビルド設定
 
 ### 主な機能
 

@@ -6,10 +6,6 @@ options:
   deploymentTarget:
     iOS: "14.0"
   createIntermediateGroups: true
-  # 生成する .xcodeproj の形式を Xcode 15 互換に固定する。
-  # 既定では新しい XcodeGen が Xcode 16 形式（objectVersion 77）を出力し、
-  # CI ランナーの Xcode 15.4 が読めずに失敗するため明示する。
-  objectVersion: 56
 
 settings:
   base:

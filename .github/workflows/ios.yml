@@ -17,7 +17,9 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    # XcodeGen が生成するプロジェクトは Xcode 16 形式（objectVersion 77）のため、
+    # それを読める Xcode 16 系が既定の macos-15 ランナーを使う。
+    runs-on: macos-15
     steps:
       - name: Checkout
         uses: actions/checkout@v4

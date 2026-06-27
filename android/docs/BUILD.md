@@ -52,8 +52,15 @@ cd android
 - 対象ブランチ: `main` および `claude/**`、Pull Request、手動実行（workflow_dispatch）
 - JDK 17 をセットアップし `./gradlew assembleDebug` を実行
 - 生成したデバッグ APK を Artifact `fruit-game-debug-apk` としてアップロード
+- `main` への push のみ、GitHub Release（タグ `debug-latest`）に APK を公開
 
-ビルド結果は Actions の実行ページ → Artifacts から `fruit-game-debug-apk` をダウンロードして取得します。
+ビルド結果の取得方法は2通りあります。
+
+- **スマホ向け（推奨）**: GitHub Release から固定 URL で直接ダウンロード
+  `https://github.com/tokibito/fruit-game/releases/download/debug-latest/fruit-game-debug.apk`
+  （ログイン不要・期限なし。`main` への push 時のみ更新。詳細は [RELEASE.md](RELEASE.md)）
+- **Artifact**: Actions の実行ページ → Artifacts から `fruit-game-debug-apk` をダウンロード
+  （要ログイン・zip 圧縮・保存期限あり。`claude/**` ブランチや PR のビルドはこちら）
 
 > CI が生成するのは**デバッグ APK** です。正式配布にはリリース署名が必要です（[RELEASE.md](RELEASE.md) を参照）。
 

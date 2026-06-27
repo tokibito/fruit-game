@@ -3,6 +3,22 @@
 CI が自動生成するのは**デバッグ APK** です。
 Google Play への公開や、デバッグ署名以外での正式配布を行うには、リリースビルドの署名設定が必要です。
 
+## デバッグ APK の入手（スマホ向け）
+
+`main` に push されるたびに CI がデバッグ APK をビルドし、GitHub Release（タグ `debug-latest`）に自動で公開します。
+ダウンロード URL は毎回同じなので、ブックマークや QR コードにして使えます:
+
+```
+https://github.com/tokibito/fruit-game/releases/download/debug-latest/fruit-game-debug.apk
+```
+
+- Android スマホのブラウザでこの URL（または [Releases ページ](https://github.com/tokibito/fruit-game/releases)）を開く
+- `fruit-game-debug.apk` をタップしてダウンロード → インストール
+- 初回は「提供元不明のアプリ」のインストール許可が必要な場合があります
+- ログイン不要・期限切れで消えません（GitHub Actions の Artifact とは別物です。Artifact はログインが必要で、zip 圧縮され、保存期限があります）
+
+> これは**デバッグ署名**の APK です。動作確認・社内配布用途で、Google Play 配布には下記のリリース署名が必要です。
+
 ## バージョンの更新
 
 `app/build.gradle.kts` の `defaultConfig` を更新します。

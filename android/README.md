@@ -45,8 +45,14 @@ cd android
 生成物: `android/app/build/outputs/apk/debug/app-debug.apk`
 
 `android/**` を変更して push すると `.github/workflows/android.yml` が
-デバッグ APK を自動ビルドし、Actions の Artifact `fruit-game-debug-apk` から
-ダウンロードできます。手順の詳細は [docs/BUILD.md](docs/BUILD.md) を参照してください。
+デバッグ APK を自動ビルドします。`main` への push では、スマホから直接
+インストールできるよう GitHub Release（タグ `debug-latest`）にも公開されます:
+
+```
+https://github.com/tokibito/fruit-game/releases/download/debug-latest/app-debug.apk
+```
+
+手順の詳細は [docs/BUILD.md](docs/BUILD.md) / [docs/RELEASE.md](docs/RELEASE.md) を参照してください。
 
 ## 配布について
 

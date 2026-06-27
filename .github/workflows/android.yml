@@ -16,6 +16,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,3 +45,23 @@ jobs:
           name: fruit-game-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+      # main への push のみ、スマホから直接インストールできるよう GitHub Release に APK を公開する。
+      # tag "debug-latest" を毎回上書きするので、ダウンロード URL は常に固定:
+      #   https://github.com/tokibito/fruit-game/releases/download/debug-latest/app-debug.apk
+      - name: Publish debug APK to GitHub Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: debug-latest
+          name: "最新デバッグ APK"
+          prerelease: true
+          body: |
+            main の最新コミットから自動ビルドしたデバッグ APK です。
+
+            ## スマホへのインストール
+            このページを Android スマホのブラウザで開き、下の **app-debug.apk** をタップしてダウンロード → インストールしてください。
+            （初回は「提供元不明のアプリ」のインストール許可が必要な場合があります）
+
+            - Commit: ${{ github.sha }}
+          files: android/app/build/outputs/apk/debug/app-debug.apk

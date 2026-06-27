@@ -40,6 +40,13 @@ https://tokibito.github.io/fruit-game/
 公開サイトを WebView で表示する Android 向けガワアプリ（ラッパーアプリ）を `android/` に用意しています。
 ゲーム本体は `public_html/` のものをそのまま使うため、ゲームの修正はサイトを更新するだけでアプリにも反映されます（アプリ再ビルド不要）。
 
+### ダウンロード
+
+スマホから直接インストールできるデバッグ APK を以下の固定 URL で配布しています（`main` への push ごとに自動更新）。
+Android スマホのブラウザで開いてダウンロード → インストールしてください（初回は「提供元不明のアプリ」のインストール許可が必要な場合があります）。
+
+https://github.com/tokibito/fruit-game/releases/download/debug-latest/fruit-game-debug.apk
+
 詳細は [android/README.md](android/README.md)（アーキテクチャ・ビルド・リリース・トラブルシュートの各ドキュメントへの入口）を参照してください。
 
 ## 開発

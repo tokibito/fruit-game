@@ -38,6 +38,10 @@ class WebViewController: UIViewController {
 
         webView = WKWebView(frame: .zero, configuration: configuration)
 
+        // 既定のサイト（GitHub Pages）以外への遷移をブロックするため、
+        // ナビゲーションの可否を自前で判定する（Android の shouldOverrideUrlLoading 相当）。
+        webView.navigationDelegate = self
+
         // 端末のスワイプ操作で WebView の履歴をたどる（Android の戻る操作相当）。
         webView.allowsBackForwardNavigationGestures = true
 
@@ -62,5 +66,39 @@ class WebViewController: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         UIApplication.shared.isIdleTimerDisabled = false
+    }
+
+    // MARK: - 既定 URL の判定
+
+    /// 既定のサイト内への遷移かどうかを判定する。
+    ///
+    /// スキーム（https）・ホスト（tokibito.github.io）・パスの接頭辞（/fruit-game/）が
+    /// すべて一致する場合のみ許可し、それ以外への遷移はブロックする。
+    private func isAllowedURL(_ url: URL) -> Bool {
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true),
+              let base = URLComponents(url: Self.gameURL, resolvingAgainstBaseURL: true) else {
+            return false
+        }
+        return components.scheme?.lowercased() == base.scheme?.lowercased() &&
+            components.host?.lowercased() == base.host?.lowercased() &&
+            components.path.hasPrefix(base.path)
+    }
+}
+
+// MARK: - WKNavigationDelegate
+
+extension WebViewController: WKNavigationDelegate {
+
+    /// 既定のサイト以外への遷移をキャンセルする（外部リンクなどをブロック）。
+    func webView(
+        _ webView: WKWebView,
+        decidePolicyFor navigationAction: WKNavigationAction,
+        decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+    ) {
+        guard let url = navigationAction.request.url, isAllowedURL(url) else {
+            decisionHandler(.cancel)
+            return
+        }
+        decisionHandler(.allow)
     }
 }

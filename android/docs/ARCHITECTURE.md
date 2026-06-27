@@ -74,6 +74,7 @@ android/
 ### ナビゲーションと状態保持
 
 - `WebViewClient` を設定し、リンク遷移を WebView 内に閉じ込める（外部ブラウザを起動しない）。
+- `shouldOverrideUrlLoading` で遷移先 URL を検査し、既定のサイト（`GAME_URL` のスキーム・ホスト・パス接頭辞 `/fruit-game/`）以外への遷移はキャンセルしてブロックする。これにより、万一サイト内に外部リンクや予期しないリダイレクトがあっても WebView が既定 URL の外へ出ることはない。
 - 端末の戻る操作は `OnBackPressedCallback` で受け、WebView に履歴があれば `goBack()`、なければアプリを終了する。
 - 画面回転などの構成変更は `AndroidManifest.xml` の `configChanges` で Activity 再生成を抑止し、加えて `onSaveInstanceState` / `restoreState` で WebView の状態を保存・復元する。
 

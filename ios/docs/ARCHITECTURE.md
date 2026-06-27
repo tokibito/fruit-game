@@ -62,6 +62,7 @@ Android 版 `MainActivity.kt` と対になる対応関係です。
 | `allowsInlineMediaPlayback = true` | インライン再生（全画面プレイヤーに奪われない） | — |
 | `mediaTypesRequiringUserActionForPlayback = []` | BGM / 効果音の自動再生 | `mediaPlaybackRequiresUserGesture = false` |
 | （標準対応） | Service Worker / IndexedDB | `ServiceWorkerControllerCompat` / `databaseEnabled` |
+| `navigationDelegate`（`decidePolicyFor`） | 既定サイト以外への遷移をブロック | `shouldOverrideUrlLoading` |
 | `allowsBackForwardNavigationGestures = true` | スワイプで履歴を戻る | 戻るボタン（`OnBackPressedCallback`） |
 | `scrollView.bounces = false` | スクロールのバウンスを抑止し固定画面に | `useWideViewPort` / `loadWithOverviewMode` |
 | `isIdleTimerDisabled = true` | 遊んでいる間は画面を消さない（幼児向け） | `keepScreenOn = true` |
@@ -72,6 +73,13 @@ Android 版 `MainActivity.kt` と対になる対応関係です。
 WKWebView は https 経由で読み込んだサイトの Service Worker / IndexedDB を **標準でサポート**します
 （iOS 14 以降）。そのため Android のように明示的なコントローラ設定は不要で、サイト側のオフライン実装を
 そのまま利用できます。Deployment Target を iOS 14.0 にしているのはこのためです。
+
+### 遷移先 URL の制限
+
+`WKNavigationDelegate` の `decidePolicyFor navigationAction` で遷移先 URL を検査し、既定のサイト
+（`gameURL` のスキーム・ホスト・パス接頭辞 `/fruit-game/`）以外への遷移は `.cancel` でブロックします。
+これにより、万一サイト内に外部リンクや予期しないリダイレクトがあっても WKWebView が既定 URL の外へ出ることはありません。
+Android 版の `shouldOverrideUrlLoading` と対になる仕組みです。
 
 ### 状態保持と向き
 

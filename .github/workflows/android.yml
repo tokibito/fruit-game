@@ -39,16 +39,23 @@ jobs:
         run: ./gradlew assembleDebug --no-daemon --stacktrace
         working-directory: android
 
+      # Gradle 既定の app-debug.apk を分かりやすい名前にリネームする。
+      # バージョンは APK 内部に埋め込まれており、名前に含めると Release の固定 URL が
+      # 変わってしまうため、ファイル名はバージョン非依存（fruit-game-debug.apk）に保つ。
+      - name: Rename APK
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk fruit-game-debug.apk
+
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
           name: fruit-game-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: fruit-game-debug.apk
           if-no-files-found: error
 
       # main への push のみ、スマホから直接インストールできるよう GitHub Release に APK を公開する。
       # tag "debug-latest" を毎回上書きするので、ダウンロード URL は常に固定:
-      #   https://github.com/tokibito/fruit-game/releases/download/debug-latest/app-debug.apk
+      #   https://github.com/tokibito/fruit-game/releases/download/debug-latest/fruit-game-debug.apk
       - name: Publish debug APK to GitHub Release
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
@@ -60,8 +67,8 @@ jobs:
             main の最新コミットから自動ビルドしたデバッグ APK です。
 
             ## スマホへのインストール
-            このページを Android スマホのブラウザで開き、下の **app-debug.apk** をタップしてダウンロード → インストールしてください。
+            このページを Android スマホのブラウザで開き、下の **fruit-game-debug.apk** をタップしてダウンロード → インストールしてください。
             （初回は「提供元不明のアプリ」のインストール許可が必要な場合があります）
 
             - Commit: ${{ github.sha }}
-          files: android/app/build/outputs/apk/debug/app-debug.apk
+          files: fruit-game-debug.apk

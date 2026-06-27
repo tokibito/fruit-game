@@ -49,7 +49,7 @@ cd android
 インストールできるよう GitHub Release（タグ `debug-latest`）にも公開されます:
 
 ```
-https://github.com/tokibito/fruit-game/releases/download/debug-latest/app-debug.apk
+https://github.com/tokibito/fruit-game/releases/download/debug-latest/fruit-game-debug.apk
 ```
 
 手順の詳細は [docs/BUILD.md](docs/BUILD.md) / [docs/RELEASE.md](docs/RELEASE.md) を参照してください。

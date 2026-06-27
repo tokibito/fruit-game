@@ -57,7 +57,7 @@ cd android
 ビルド結果の取得方法は2通りあります。
 
 - **スマホ向け（推奨）**: GitHub Release から固定 URL で直接ダウンロード
-  `https://github.com/tokibito/fruit-game/releases/download/debug-latest/app-debug.apk`
+  `https://github.com/tokibito/fruit-game/releases/download/debug-latest/fruit-game-debug.apk`
   （ログイン不要・期限なし。`main` への push 時のみ更新。詳細は [RELEASE.md](RELEASE.md)）
 - **Artifact**: Actions の実行ページ → Artifacts から `fruit-game-debug-apk` をダウンロード
   （要ログイン・zip 圧縮・保存期限あり。`claude/**` ブランチや PR のビルドはこちら）

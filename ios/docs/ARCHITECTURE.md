@@ -87,7 +87,7 @@ WKWebView は https 経由で読み込んだサイトの Service Worker / Indexe
 | 対応デバイス | iPhone / iPad（`TARGETED_DEVICE_FAMILY = 1,2`）|
 | Swift | 5.0 |
 | プロジェクト生成 | XcodeGen（`project.yml`）|
-| ビルド | Xcode 15+ / `xcodebuild` |
+| ビルド | Xcode 16+ / `xcodebuild`（CI は `macos-15` ランナー）|
 
 ## 読み込み先 URL
 

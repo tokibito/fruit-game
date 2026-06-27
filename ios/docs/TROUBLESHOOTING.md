@@ -25,7 +25,8 @@ WKWebView ガワアプリ特有の問題と対処をまとめます。
 ## ビルドが失敗する
 
 - **XcodeGen 未生成**: `xcodegen generate` を実行して `FruitGame.xcodeproj` を生成したか確認します（`.xcodeproj` はコミットされていません）。
-- **Xcode / SDK**: iOS 14 以降の SDK を含む Xcode（15 以降）が必要です。
+- **`future Xcode project file format (77)` エラー**: 最新の XcodeGen は Xcode 16 形式のプロジェクトを生成するため、Xcode 15 では開けません。**Xcode 16 以降**を使ってください（CI は `macos-15` ランナーを使用）。
+- **Xcode / SDK**: iOS 14 以降の SDK を含む Xcode（16 以降）が必要です。
 - **署名エラー**: シミュレータ向けは `CODE_SIGNING_ALLOWED=NO` で署名不要です。実機向けは Apple Developer の署名設定が必要です（[RELEASE.md](RELEASE.md) を参照）。
 - 詳細なログは `xcodebuild ... -verbose` で確認できます。
 

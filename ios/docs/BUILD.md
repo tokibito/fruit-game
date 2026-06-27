@@ -8,10 +8,13 @@ iOS アプリ（WKWebView ガワアプリ）のビルド方法をまとめます
 | ツール | バージョン |
 | --- | --- |
 | macOS | Xcode が動作するバージョン |
-| Xcode | 15 以降（iOS 14+ SDK を含む）|
+| Xcode | 16 以降（iOS 14+ SDK を含む）|
 | XcodeGen | 最新（`brew install xcodegen`）|
 
 > iOS のビルドには **macOS と Xcode が必須**です（Android のように Linux ではビルドできません）。
+>
+> Xcode は **16 以降**が必要です。最新の XcodeGen は Xcode 16 形式（`objectVersion 77`）の
+> プロジェクトを生成するため、Xcode 15 では開けません（`future Xcode project file format (77)` エラー）。
 
 ## Xcode プロジェクトの生成
 
@@ -65,8 +68,11 @@ xcodebuild -project FruitGame.xcodeproj -scheme FruitGame \
 ワークフロー **Build iOS App**（`.github/workflows/ios.yml`）が起動します。
 
 - 対象ブランチ: `main` および `claude/**`、Pull Request、手動実行（workflow_dispatch）
-- macOS ランナーで XcodeGen をインストール → `xcodegen generate`
+- `macos-15` ランナー（Xcode 16 系が既定）で XcodeGen をインストール → `xcodegen generate`
 - 署名なし（`CODE_SIGNING_ALLOWED=NO`）でシミュレータ向けにビルドし、ビルドの成否を検証
+
+> XcodeGen が生成するプロジェクトは Xcode 16 形式のため、それを既定で読める Xcode 16 系が入った
+> `macos-15` ランナーを使用しています（Xcode 15.4 が既定の `macos-14` では読めずに失敗します）。
 
 > CI は **ビルドが通ることの検証** までです。配布可能な `.ipa` の生成には署名が必要で、
 > Apple Developer アカウントと証明書・プロビジョニングプロファイルが要ります（[RELEASE.md](RELEASE.md) を参照）。

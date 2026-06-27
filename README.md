@@ -49,6 +49,15 @@ https://github.com/tokibito/fruit-game/releases/download/debug-latest/fruit-game
 
 詳細は [android/README.md](android/README.md)（アーキテクチャ・ビルド・リリース・トラブルシュートの各ドキュメントへの入口）を参照してください。
 
+## iOS アプリ
+
+同じく公開サイトを WKWebView で表示する iOS 向けガワアプリ（ラッパーアプリ）を `ios/` に用意しています。
+Android 版と同じ思想・同じ読み込み先 URL を使い、ゲーム本体は `public_html/` のものをそのまま利用します。
+
+iOS は実機インストール・配布に Apple Developer Program（有料）と署名が必要なため、APK のような野良配布はできません。
+CI（`.github/workflows/ios.yml`）では署名なしのシミュレータビルドでビルドの成否を検証します。
+ビルド・配布手順の詳細は [ios/README.md](ios/README.md) を参照してください。
+
 ## 開発
 
 詳細な仕様は[spec.md](spec.md)を参照してください。

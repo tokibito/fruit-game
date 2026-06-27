@@ -1,0 +1,17 @@
+# XcodeGen が生成する成果物（コミットしない。project.yml から再生成する）
+FruitGame.xcodeproj/
+
+# Xcode / ビルド成果物
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# 署名情報（リポジトリに含めない）
+*.mobileprovision
+*.p12
+*.cer
+ExportOptions.plist

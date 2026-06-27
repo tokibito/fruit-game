@@ -1,0 +1,43 @@
+# iOS ガワアプリ（WKWebView ラッパー）をビルドする。
+# iOS は署名に Apple Developer アカウントが必要なため、CI では
+# 署名不要のシミュレータ向けビルドで「ビルドが通ること」を検証する。
+name: Build iOS App
+
+on:
+  push:
+    branches: ["main", "claude/**"]
+    paths:
+      - "ios/**"
+      - ".github/workflows/ios.yml"
+  pull_request:
+    paths:
+      - "ios/**"
+      - ".github/workflows/ios.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+        working-directory: ios
+
+      # 署名なしでシミュレータ向けにビルドし、ビルドが通ることを検証する。
+      - name: Build for iOS Simulator (no signing)
+        run: |
+          xcodebuild \
+            -project FruitGame.xcodeproj \
+            -scheme FruitGame \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+        working-directory: ios

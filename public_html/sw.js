@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fruit-game-v7';
+const CACHE_NAME = 'fruit-game-v8';
 const DB_NAME = 'fruit-game-db';
 const DB_VERSION = 2;
 const STORE_NAME = 'resources';

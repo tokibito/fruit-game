@@ -98,6 +98,10 @@
                 transform: scale(0.4) rotate(90deg);
             }
         }
+        /* チャージが最大（2倍サイズ）に達したキラキラを強調する */
+        .sparkle.sparkle-charged {
+            filter: drop-shadow(0 0 8px gold) drop-shadow(0 0 16px gold);
+        }
         .pop-effect {
             position: absolute;
             font-size: 48px;
@@ -615,6 +619,50 @@
             saveState();
         }
 
+        // フルーツを1個ゲットする（スコア加算・効果音・エフェクト・削除）
+        // silent=true のときは効果音を鳴らさない（一括ゲット時にまとめて鳴らすため）
+        function popFruit(fruit, silent) {
+            if (!fruit || !fruit.parentElement) return;
+
+            // スコア加算（特別なフルーツは10点）
+            const isSpecial = fruit.hasAttribute('data-special');
+            score += isSpecial ? 10 : 1;
+            updateScore();
+
+            // 効果音再生（ボーナスフルーツはキラリン、通常はドギュン）
+            if (!silent) {
+                playSound(isSpecial ? SOUND_BONUS : SOUND_NORMAL);
+            }
+
+            // エフェクト表示
+            const effect = document.createElement('div');
+            effect.className = 'pop-effect';
+            effect.textContent = isSpecial ? '⭐' : '💥';
+            if (isSpecial) {
+                effect.style.fontSize = '72px';
+                effect.style.color = 'gold';
+                effect.style.textShadow = '0 0 20px gold';
+            }
+            effect.style.left = fruit.style.left;
+            effect.style.top = fruit.style.top;
+            gameArea.appendChild(effect);
+
+            // エフェクトを削除、フルーツを削除してカウント減少
+            setTimeout(() => effect.remove(), 500);
+            fruit.remove();
+            fruitCount--;
+        }
+
+        // 画面に表示されているフルーツをすべてゲットする
+        // （キラキラを最大までチャージした状態でリリースしたときに発動）
+        function collectAllFruits() {
+            const fruits = gameArea.querySelectorAll('.fruit');
+            if (!fruits.length) return;
+            fruits.forEach((fruit) => popFruit(fruit, true));
+            // 一括ゲットは豪華に1回だけ効果音を鳴らす
+            playSound(SOUND_BONUS);
+        }
+
         // フルーツを生成
         function spawnFruit() {
             // 最大数に達している場合、最も古いフルーツを削除
@@ -811,31 +859,7 @@
 
                 // ドラッグせずにタップだけの場合は消す
                 if (!dragStarted) {
-                    // スコア加算（特別なフルーツは10点）
-                    const isSpecial = fruit.hasAttribute('data-special');
-                    score += isSpecial ? 10 : 1;
-                    updateScore();
-
-                    // 効果音再生（ボーナスフルーツはキラリン、通常はドギュン）
-                    playSound(isSpecial ? SOUND_BONUS : SOUND_NORMAL);
-
-                    // エフェクト表示
-                    const effect = document.createElement('div');
-                    effect.className = 'pop-effect';
-                    effect.textContent = isSpecial ? '⭐' : '💥';
-                    if (isSpecial) {
-                        effect.style.fontSize = '72px';
-                        effect.style.color = 'gold';
-                        effect.style.textShadow = '0 0 20px gold';
-                    }
-                    effect.style.left = fruit.style.left;
-                    effect.style.top = fruit.style.top;
-                    gameArea.appendChild(effect);
-
-                    // エフェクトを削除、フルーツを削除してカウント減少
-                    setTimeout(() => effect.remove(), 500);
-                    fruit.remove();
-                    fruitCount--;
+                    popFruit(fruit);
                 }
 
                 e.preventDefault();
@@ -863,11 +887,23 @@
         // フルーツ以外の場所を触ったときに、指（カーソル）の位置にキラキラを表示する。
         // タッチしたまま動かすと軌跡のようにキラキラが追加され、2秒かけて消えていく。
         // 何もないところを触っても画面に動きが出るようにするための演出。
+        //
+        // チャージ機能:
+        // 触れ続けている間、新しく出るキラキラのサイズが少しずつ大きくなり、
+        // 3秒で最大（2倍）に到達する。最大までチャージした状態で指を離すと、
+        // 画面に表示されているフルーツをすべてゲットできる。
         const SPARKLE_COLORS = ['#fff6b0', '#bae6fd', '#fbcfe8', '#d9f99d', '#fff'];
         // 軌跡として追加する最小移動距離（短すぎる移動で大量に生成しないため）
         const SPARKLE_MIN_DISTANCE = 14;
-        // 直前にキラキラを生成した位置（ポインタ/タッチIDごと）
-        const lastSparklePos = {};
+        // 最大サイズに到達するまでの時間（ミリ秒）
+        const SPARKLE_CHARGE_DURATION = 3000;
+        // チャージ最大時のサイズ倍率
+        const SPARKLE_MAX_SCALE = 2;
+        // 静止していてもチャージ中はキラキラを出し続ける間隔（ミリ秒）
+        const SPARKLE_EMIT_INTERVAL = 110;
+        // チャージ中のタッチ/カーソルごとの状態（タッチID・mouse をキーにする）
+        // { startTime, x, y, lastEmitX, lastEmitY, timer }
+        const sparkleTouches = {};
 
         // 指定座標がフルーツ上かどうかを判定（フルーツ上では軌跡を出さない）
         function isOnFruit(x, y) {
@@ -875,17 +911,34 @@
             return !!(el && el.closest && el.closest('.fruit'));
         }
 
-        // 1粒のキラキラを生成
-        function createSparkle(x, y) {
+        // チャージ進行度（0〜1）。3秒で1になる。
+        function sparkleChargeRatio(key) {
+            const st = sparkleTouches[key];
+            if (!st) return 0;
+            return Math.min((Date.now() - st.startTime) / SPARKLE_CHARGE_DURATION, 1);
+        }
+
+        // 現在のキラキラのサイズ倍率（1〜2倍）
+        function sparkleScale(key) {
+            return 1 + sparkleChargeRatio(key) * (SPARKLE_MAX_SCALE - 1);
+        }
+
+        // 1粒のキラキラを生成（scale はサイズ倍率）
+        function createSparkle(x, y, scale) {
+            scale = scale || 1;
             const sparkle = document.createElement('div');
             sparkle.className = 'sparkle';
+            // チャージ最大時は強調表示して、離すと全部ゲットできる合図にする
+            if (scale >= SPARKLE_MAX_SCALE - 0.001) {
+                sparkle.classList.add('sparkle-charged');
+            }
             // 少しランダムにずらして自然な散らばりにする
             const jitterX = (Math.random() - 0.5) * 16;
             const jitterY = (Math.random() - 0.5) * 16;
             sparkle.style.left = (x + jitterX) + 'px';
             sparkle.style.top = (y + jitterY) + 'px';
-            // サイズと色をランダムに
-            const size = 12 + Math.random() * 14;
+            // サイズと色をランダムに（チャージ倍率を掛ける）
+            const size = (12 + Math.random() * 14) * scale;
             sparkle.style.width = size + 'px';
             sparkle.style.height = size + 'px';
             sparkle.style.marginLeft = (-size / 2) + 'px';
@@ -898,24 +951,51 @@
             setTimeout(() => sparkle.remove(), 2000);
         }
 
-        // タッチ/カーソル開始時にキラキラを表示
+        // タッチ/カーソル開始時にキラキラを表示し、チャージを開始する
         function spawnSparkleAt(x, y, key) {
             if (isOnFruit(x, y)) return;
-            createSparkle(x, y);
-            lastSparklePos[key] = { x, y };
+            const st = {
+                startTime: Date.now(),
+                x: x, y: y,            // 現在位置（静止中の発生に使う）
+                lastEmitX: x, lastEmitY: y,
+                timer: null
+            };
+            sparkleTouches[key] = st;
+            createSparkle(x, y, sparkleScale(key));
+            // 静止していてもチャージの進み具合が見えるよう、定期的にキラキラを出す
+            st.timer = setInterval(() => {
+                const s = sparkleTouches[key];
+                if (!s || isOnFruit(s.x, s.y)) return;
+                createSparkle(s.x, s.y, sparkleScale(key));
+            }, SPARKLE_EMIT_INTERVAL);
         }
 
         // 移動時、一定距離ごとにキラキラを追加して軌跡をつくる
         function trailSparkleAt(x, y, key) {
-            const last = lastSparklePos[key];
-            if (last) {
-                const dx = x - last.x;
-                const dy = y - last.y;
-                if (dx * dx + dy * dy < SPARKLE_MIN_DISTANCE * SPARKLE_MIN_DISTANCE) return;
-            }
+            const st = sparkleTouches[key];
+            if (!st) return; // フルーツ上で開始した等、チャージ中でない場合は何もしない
+            st.x = x;
+            st.y = y;
+            const dx = x - st.lastEmitX;
+            const dy = y - st.lastEmitY;
+            if (dx * dx + dy * dy < SPARKLE_MIN_DISTANCE * SPARKLE_MIN_DISTANCE) return;
             if (isOnFruit(x, y)) return;
-            createSparkle(x, y);
-            lastSparklePos[key] = { x, y };
+            createSparkle(x, y, sparkleScale(key));
+            st.lastEmitX = x;
+            st.lastEmitY = y;
+        }
+
+        // 指を離したときの処理。チャージが最大なら画面のフルーツを全部ゲットする。
+        // collect=false（タッチキャンセル等）のときはゲットせずにチャージだけ終了する。
+        function endSparkleAt(key, collect) {
+            const st = sparkleTouches[key];
+            if (!st) return;
+            if (st.timer) clearInterval(st.timer);
+            delete sparkleTouches[key];
+            const charged = (Date.now() - st.startTime) >= SPARKLE_CHARGE_DURATION;
+            if (collect && charged) {
+                collectAllFruits();
+            }
         }
 
         // タッチ操作（マルチタッチ対応）
@@ -931,13 +1011,14 @@
                 trailSparkleAt(t.clientX, t.clientY, 'touch-' + t.identifier);
             }
         }, { passive: true });
-        function clearTouchSparkleKeys(e) {
+        function endTouchSparkles(e, collect) {
             for (let i = 0; i < e.changedTouches.length; i++) {
-                delete lastSparklePos['touch-' + e.changedTouches[i].identifier];
+                endSparkleAt('touch-' + e.changedTouches[i].identifier, collect);
             }
         }
-        gameArea.addEventListener('touchend', clearTouchSparkleKeys, { passive: true });
-        gameArea.addEventListener('touchcancel', clearTouchSparkleKeys, { passive: true });
+        // 指を離したとき（touchend）はゲット判定する。キャンセルは判定しない。
+        gameArea.addEventListener('touchend', (e) => endTouchSparkles(e, true), { passive: true });
+        gameArea.addEventListener('touchcancel', (e) => endTouchSparkles(e, false), { passive: true });
 
         // マウス操作（PCでのテスト用）
         let mouseSparkleDown = false;
@@ -951,7 +1032,7 @@
         });
         document.addEventListener('mouseup', () => {
             mouseSparkleDown = false;
-            delete lastSparklePos['mouse'];
+            endSparkleAt('mouse', true);
         });
 
         // 読み込み時に保存済みの状態を復元する。
